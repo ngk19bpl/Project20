@@ -6,4 +6,5 @@ import org.springframework.web.multipart.MultipartFile;
 public interface EmployeeService {
     String importExcelData(MultipartFile file);
     void generateExcel() throws IOException;
+    String exportDataToExcel();
 }

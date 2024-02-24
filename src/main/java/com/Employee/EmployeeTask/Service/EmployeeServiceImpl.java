@@ -1,12 +1,13 @@
 package com.Employee.EmployeeTask.Service;
 
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.Employee.EmployeeTask.Constant.EmployeeConstant;
+import com.Employee.EmployeeTask.Exception.EmployeeException;
 import com.Employee.EmployeeTask.Repository.EmployeeRepository;
 import com.Employee.EmployeeTask.entity.Employee;
 
@@ -43,13 +44,12 @@ public class EmployeeServiceImpl implements EmployeeService {
                 sheet.setColumnWidth(i, 15 * 256);
             }
 
-            try (FileOutputStream fileOut = new FileOutputStream(
-                    "D:/kafka/import_export/import-export/src/main/resources/templates/employee.xlsx")) {
+            try (FileOutputStream fileOut = new FileOutputStream(EmployeeConstant.FILE_PATH)) {
                 workbook.write(fileOut);
             }
             System.out.println("Excel file generated successfully.");
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new EmployeeException("employee data export errror" + e);
         }
     }
 
@@ -106,8 +106,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 importedEmployees.add(employee);
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            return "Failed to import data: " + e.getMessage();
+            throw new EmployeeException("employee data export errror" + e);
         }
 
         employeeRepository.saveAll(importedEmployees);
@@ -125,4 +124,52 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
         return null;
     }
+
+    public String exportDataToExcel() {
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("employee.xlsx");
+            List<Employee> employees = employeeRepository.findAll();
+
+            int rowNum = 0;
+            Row headerRow = sheet.createRow(rowNum++);
+
+            String[] headers = { "EmpID", "FirstName", "LastLame", "Address", "Email", "DOB", "Contact",
+                    "Gender", "Department", "Salary", "EmpStatus" };
+            int colNum = 0;
+            for (String header : headers) {
+                Cell cell = headerRow.createCell(colNum++);
+                cell.setCellValue(header);
+
+                CellStyle style = workbook.createCellStyle();
+                Font font = workbook.createFont();
+                font.setBold(true);
+                style.setFont(font);
+                cell.setCellStyle(style);
+            }
+
+            for (Employee employee : employees) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(employee.getId());
+                row.createCell(1).setCellValue(employee.getFirstName());
+                row.createCell(2).setCellValue(employee.getLastName());
+                row.createCell(3).setCellValue(employee.getAddress());
+                row.createCell(4).setCellValue(employee.getEmail());
+                row.createCell(5).setCellValue(employee.getDob());
+                row.createCell(6).setCellValue(employee.getContact());
+                row.createCell(7).setCellValue(employee.getGender());
+                row.createCell(8).setCellValue(employee.getDepartment());
+                row.createCell(9).setCellValue(employee.getSalary());
+                row.createCell(10).setCellValue(employee.getEmployeeStatus());
+            }
+            try (FileOutputStream fileOut = new FileOutputStream(EmployeeConstant.FILE_PATH)) {
+                workbook.write(fileOut);
+            }
+
+            return "Data exported to Excel successfully!";
+        } catch (IOException e) {
+            throw new EmployeeException("employee data export errror" + e);
+
+        }
+    };
+
 }
