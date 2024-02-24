@@ -10,15 +10,22 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.Employee.EmployeeTask.Constant.EmployeeConstant;
 import com.Employee.EmployeeTask.Service.EmployeeService;
+import com.Employee.EmployeeTask.entity.Employee;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/v1")
 public class EmployeeController {
+
+    private final String UPLOAD_FOLDER = "Project20/src/main/java/com/Employee/uploads/";
 
     @Autowired
     private EmployeeService employeeService;
@@ -96,4 +103,52 @@ public class EmployeeController {
         }
     }
 
+    @GetMapping("/list")
+    public ResponseEntity<List<Employee>> getAllProfilePictures() {
+        try {
+            List<Employee> images = employeeService.getAllProfilePictures();
+            Map<String, Object> response = new HashMap<>();
+            response.put("msg", "Fetching list of profile pictures");
+            return new ResponseEntity<>(images, HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/images/{profile_picture}")
+    public ResponseEntity<byte[]> getImages(@PathVariable("profile_picture") String profilePicture) 
+    {
+        Optional<Employee> imageOptional = employeeService.getImageById(profilePicture);
+        if (imageOptional.isPresent()) {
+            Employee image = imageOptional.get();
+            try {
+                Path imagePath = Paths.get(UPLOAD_FOLDER, image.getProfilePicture());
+                byte[] imageBytes = Files.readAllBytes(imagePath);
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+                headers.setContentDispositionFormData("attachment", image.getProfilePicture());
+                return ResponseEntity.ok().headers(headers).body(imageBytes);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            }
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/image/upload")
+    public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                return new ResponseEntity<>("Please select a file to upload", HttpStatus.BAD_REQUEST);
+            }
+            employeeService.uploadImage(file);
+            return new ResponseEntity<>("File uploaded successfully", HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Failed to upload file", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

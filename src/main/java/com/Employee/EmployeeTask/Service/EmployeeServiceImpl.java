@@ -3,6 +3,7 @@ package com.Employee.EmployeeTask.Service;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,9 +18,17 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.lang.reflect.Field;
+import java.nio.file.Path;
+import java.util.Optional;
+import java.io.File;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
+
+    @Value("${upload.folder}")
+    private String uploadFolder;
 
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -176,4 +185,44 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
     };
 
+    @Override
+    public List<Employee> getAllProfilePictures() {
+        return employeeRepository.findAll();
+    }
+
+    @Override
+    public Optional<Employee> getImageById(String profilePicture) {
+        return employeeRepository.findByProfilePicture(profilePicture);
+    }
+
+    @Override
+    public void uploadImage(MultipartFile file) {
+        try {
+            if (file.isEmpty()) 
+            {
+                throw new IllegalArgumentException("File is empty");
+            }
+            byte[] imageData = file.getBytes();
+            Path folderPath = Paths.get(uploadFolder);
+            if (!Files.exists(folderPath)) 
+            {
+                Files.createDirectories(folderPath);
+            }
+            Employee employee = new Employee();
+            employeeRepository.save(employee);
+            String id = employee.getId();
+
+            String originalFilename = file.getOriginalFilename().toLowerCase();
+            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+            String fileName = id + fileExtension;
+            employee.setProfilePicture(fileName);
+            Path filePath = Paths.get(uploadFolder + File.separator + fileName);
+            Files.write(filePath, imageData);
+            employeeRepository.save(employee);
+        } 
+        catch (IOException e) 
+        {
+            e.printStackTrace();
+        }
+    }
 }
