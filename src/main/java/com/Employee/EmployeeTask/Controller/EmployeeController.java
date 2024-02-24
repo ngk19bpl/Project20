@@ -22,7 +22,6 @@ public class EmployeeController {
 
     @Autowired
     private EmployeeService employeeService;
-  
 
     @GetMapping("/generate-excel")
     public ResponseEntity<String> generateExcel() {
@@ -35,20 +34,34 @@ public class EmployeeController {
         }
     }
 
-    @GetMapping("/download/excel")
-    public ResponseEntity<byte[]> downloadFile() throws IOException {
-
+    /*
+     * Created by Anand Swaroop Redyy Pittu
+     * On 24-02-2024
+     */
+    @GetMapping(value = "/download/excel")
+    public ResponseEntity<byte[]> exportDownloadFile() throws IOException {
         Path path = Paths.get(EmployeeConstant.FILE_PATH);
+        Path paths = Paths.get(EmployeeConstant.FILE_PATH_2);
+        if (Files.exists(path)) {
+            byte[] fileContent = Files.readAllBytes(path);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            headers.setContentDispositionFormData("attachment", "employee.xlsx");
 
-        byte[] fileContent = Files.readAllBytes(path);
+            new Thread(() -> {
+                try {
+                    Thread.sleep(EmployeeConstant.SLEEP_TIME);
+                    Files.deleteIfExists(paths);
+                    System.out.println("File deleted successfully.");
+                } catch (InterruptedException | IOException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+            return ResponseEntity.ok().headers(headers).body(fileContent);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        headers.setContentDispositionFormData("attachment", "employee.xlsx");
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(fileContent);
+        } else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PostMapping("/import")
@@ -70,37 +83,15 @@ public class EmployeeController {
         this.employeeService = employeeService;
     }
 
+    /*
+     * Created by Anand Swaroop Redyy Pittu
+     * On 24-02-2024
+     */
     @PostMapping(value = "/export")
     public ResponseEntity<Object> exportData() {
         try {
             return ResponseEntity.status(200).body(employeeService.exportDataToExcel());
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @GetMapping(value = "/download/excel")
-    public ResponseEntity<byte[]> exportDownloadFile() throws IOException {
-        Path path = Paths.get(EmployeeConstant.FILE_PATH);
-
-        if (Files.exists(path)) {
-            byte[] fileContent = Files.readAllBytes(path);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-            headers.setContentDispositionFormData("attachment", "employee.xlsx");
-
-            new Thread(() -> {
-                try {
-                    Thread.sleep(EmployeeConstant.SLEEP_TIME);
-                    Files.deleteIfExists(path);
-                    System.out.println("File deleted successfully.");
-                } catch (InterruptedException | IOException e) {
-                    e.printStackTrace();
-                }
-            }).start();
-            return ResponseEntity.ok().headers(headers).body(fileContent);
-
-        } else {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }

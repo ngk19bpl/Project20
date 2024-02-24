@@ -125,6 +125,10 @@ public class EmployeeServiceImpl implements EmployeeService {
         return null;
     }
 
+    /*
+     * Created by Anand Swaroop Redyy Pittu
+     * On 24-02-2024
+     */
     public String exportDataToExcel() {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("employee.xlsx");
@@ -161,7 +165,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 row.createCell(9).setCellValue(employee.getSalary());
                 row.createCell(10).setCellValue(employee.getEmployeeStatus());
             }
-            try (FileOutputStream fileOut = new FileOutputStream(EmployeeConstant.FILE_PATH)) {
+            try (FileOutputStream fileOut = new FileOutputStream(EmployeeConstant.FILE_PATH_2)) {
                 workbook.write(fileOut);
             }
 
