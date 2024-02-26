@@ -41,4 +41,6 @@ public interface EmployeeService {
     Response<List<Employee>> saveAllEmployees(List<Employee> employees);
 
     Response<String> deleteEmployeesByIds(List<String> employeeIds);
+
+    List<Employee> findEmployeesWithSorting(String field);
 }

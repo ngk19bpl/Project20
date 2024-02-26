@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.Employee.EmployeeTask.Config.Response;
 import com.Employee.EmployeeTask.Constant.EmployeeConstant;
 import com.Employee.EmployeeTask.Service.EmployeeService;
+import com.Employee.EmployeeTask.dto.APIResponse;
 import com.Employee.EmployeeTask.entity.Employee;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -240,6 +241,32 @@ public class EmployeeController {
         } catch (Exception e) {
             logger.error("Error deleting employees: {}", e.getMessage());
             return ResponseEntity.badRequest().body(new Response<>(0, "Error deleting employees: " + e.getMessage()));
+        }
+    }
+/*applying sorting based on column names in table */
+    @GetMapping("/{field}")
+    private APIResponse<List<Employee>> getEmployeesWithSort(@PathVariable String field) {
+        try {
+            List<Employee> allEmployees = employeeService.findEmployeesWithSorting(field);
+
+            APIResponse<List<Employee>> response = new APIResponse<>();
+            response.setStatus("1");
+            response.setMessage("Employees fetched with sorting successfully");
+            response.setData(allEmployees);
+            response.setRecordCount(allEmployees.size());
+
+            logger.info("Employees fetched with sorting successfully");
+
+            return response;
+        } catch (Exception e) {
+            logger.error("Error fetching employees with sorting", e);
+
+            APIResponse<List<Employee>> errorResponse = new APIResponse<>();
+            errorResponse.setStatus("0");
+            errorResponse.setMessage("Error fetching employees with sorting");
+            errorResponse.setError(e.getMessage());
+
+            return errorResponse;
         }
     }
 }

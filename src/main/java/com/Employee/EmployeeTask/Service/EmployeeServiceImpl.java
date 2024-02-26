@@ -4,6 +4,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import com.Employee.EmployeeTask.Config.Response;
@@ -353,4 +354,19 @@ public class EmployeeServiceImpl implements EmployeeService {
             return new Response<>(0, "Error deleting employees: " + e.getMessage());
         }
     }
+
+    /* Ram 26-02-2024 soting base don column names */
+    @Override
+    public List<Employee> findEmployeesWithSorting(String field) {
+
+        try {
+            List<Employee> employees = employeeRepository.findAll(Sort.by(Sort.Direction.ASC, field));
+            logger.info("Successfully retrieved employees with sorting by field '{}'", field);
+            return employees;
+        } catch (Exception e) {
+            logger.error("Error occurred while retrieving employees with sorting by field '{}'", field, e);
+            return List.of();
+        }
+    }
+
 }
