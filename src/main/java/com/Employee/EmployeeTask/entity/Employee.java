@@ -1,24 +1,18 @@
 package com.Employee.EmployeeTask.entity;
 
-import java.util.Date;
-import org.hibernate.annotations.GenericGenerator;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.Data;
+import java.util.*;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
-@Data
 @Table(name = "Employee")
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 public class Employee {
 
     @Id
-    @GeneratedValue(generator = "uuid2")
-    @GenericGenerator(name = "uuid2", strategy = "uuid2")
-    @Column(columnDefinition = "varchar(36)")
-    private String id;
+    private String id = UUID.randomUUID().toString();
 
     @Column(name = "first_name")
     private String firstName;
@@ -26,7 +20,7 @@ public class Employee {
     @Column(name = "last_name")
     private String lastName;
 
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     private String email;
 
     @Column(name = "contact")
@@ -44,6 +38,7 @@ public class Employee {
     @Column(name = "gender")
     private String gender;
 
+    @Temporal(TemporalType.DATE)
     @Column(name = "dob")
     private Date dob;
 
@@ -52,5 +47,22 @@ public class Employee {
 
     @Column(name = "profile_picture")
     private String profilePicture;
-}
 
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Date createdAt;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "updated_at", nullable = false)
+    private Date updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = new Date();
+        updatedAt = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = new Date();
+    }
+}
