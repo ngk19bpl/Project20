@@ -6,12 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
+import com.Employee.EmployeeTask.Config.Response;
 import com.Employee.EmployeeTask.Constant.EmployeeConstant;
 import com.Employee.EmployeeTask.Exception.EmployeeException;
 import com.Employee.EmployeeTask.Repository.EmployeeRepository;
 import com.Employee.EmployeeTask.entity.Employee;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.io.FileOutputStream;
@@ -26,6 +27,8 @@ import java.nio.file.Files;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
+
+    private static final Logger logger = LoggerFactory.getLogger(EmployeeServiceImpl.class);
 
     @Value("${upload.folder}")
     private String uploadFolder;
@@ -198,14 +201,12 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public void uploadImage(MultipartFile file) {
         try {
-            if (file.isEmpty()) 
-            {
+            if (file.isEmpty()) {
                 throw new IllegalArgumentException("File is empty");
             }
             byte[] imageData = file.getBytes();
             Path folderPath = Paths.get(uploadFolder);
-            if (!Files.exists(folderPath)) 
-            {
+            if (!Files.exists(folderPath)) {
                 Files.createDirectories(folderPath);
             }
             Employee employee = new Employee();
@@ -219,10 +220,137 @@ public class EmployeeServiceImpl implements EmployeeService {
             Path filePath = Paths.get(uploadFolder + File.separator + fileName);
             Files.write(filePath, imageData);
             employeeRepository.save(employee);
-        } 
-        catch (IOException e) 
-        {
+        } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    /*
+     * Created by Kappala Varalakshmi
+     * On 26-02-2024
+     */
+
+    @Override
+    public Response<Employee> saveEmployee(Employee employee) {
+        try {
+            Employee savedEmployee = employeeRepository.save(employee);
+            logger.info("Employee saved successfully: {}", savedEmployee);
+            return new Response<>(savedEmployee, "Employee saved successfully");
+        } catch (Exception e) {
+            logger.error("Error saving employee: {}", e.getMessage());
+            return new Response<>("Error saving employee: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Response<String> deleteEmployee(String id) {
+        try {
+            Optional<Employee> optionalEmployee = employeeRepository.findById(id);
+            if (optionalEmployee.isPresent()) {
+                employeeRepository.deleteById(id);
+                logger.info("Employee deleted successfully with ID: {}", id);
+                return new Response<>(1, "Employee deleted successfully");
+            } else {
+                logger.error("Employee not found with ID: {}", id);
+                return new Response<>("Employee not found. Unable to delete.");
+            }
+        } catch (Exception e) {
+            logger.error("Error deleting employee with ID {}: {}", id, e.getMessage());
+            return new Response<>("Error deleting employee: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Response<List<Employee>> getAllEmployees() {
+        try {
+            List<Employee> employees = employeeRepository.findAll();
+            logger.info("Fetched all employees successfully");
+            return new Response<>(employees, "Employees fetched successfully");
+        } catch (Exception e) {
+            logger.error("Error fetching employees: {}", e.getMessage());
+            return new Response<>("Error fetching employees: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Response<Employee> getEmployeeById(String id) {
+        try {
+            Optional<Employee> Employee = employeeRepository.findById(id);
+            if (Employee.isPresent()) {
+                Employee employee = Employee.get();
+                logger.info("Employee fetched successfully with ID: {}", id);
+                return new Response<>(employee, "Employee fetched successfully");
+            } else {
+                logger.error("Employee not found with ID: {}", id);
+                return new Response<>("Employee not found");
+            }
+        } catch (Exception e) {
+            logger.error("Error fetching employee with ID {}: {}", id, e.getMessage());
+            return new Response<>("Error fetching employee: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Response<Employee> updateEmployeeById(String id, Employee updatedEmployee) {
+        try {
+            Optional<Employee> Employee = employeeRepository.findById(id);
+            if (Employee.isPresent()) {
+                Employee existingEmployee = Employee.get();
+
+                Field[] fields = Employee.class.getDeclaredFields();
+                for (Field field : fields) {
+                    String fieldName = field.getName();
+
+                    if (!fieldName.equals("id") && !fieldName.equals("contact") && !fieldName.equals("salary")) {
+                        field.setAccessible(true);
+                        Object value = field.get(updatedEmployee);
+
+                        if (value != null) {
+                            field.set(existingEmployee, value);
+                        }
+                    }
+                }
+
+                Employee savedEmployee = employeeRepository.save(existingEmployee);
+                logger.info("Employee updated successfully with ID: {}", id);
+                return new Response<>(savedEmployee, "Employee updated successfully");
+            } else {
+                logger.error("Employee not found with ID: {}", id);
+                return new Response<>("Employee not found");
+            }
+        } catch (Exception e) {
+            logger.error("Error updating employee with ID {}: {}", id, e.getMessage());
+            return new Response<>("Error updating employee: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Response<List<Employee>> saveAllEmployees(List<Employee> employees) {
+        try {
+            List<Employee> savedEmployees = employeeRepository.saveAll(employees);
+            logger.info("Employees inserted successfully");
+            return new Response<>(savedEmployees, "Employees inserted successfully");
+        } catch (Exception e) {
+            logger.error("Error inserting employees: {}", e.getMessage());
+            return new Response<>("Error inserting employees: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Response<String> deleteEmployeesByIds(List<String> employeeIds) {
+        try {
+            for (String id : employeeIds) {
+                if (!employeeRepository.existsById(id)) {
+                    logger.error("Employee not found with ID: {}", id);
+                    return new Response<>("Employee with ID " + id + " not found. Unable to delete.");
+                }
+            }
+            employeeIds.forEach(employeeRepository::deleteById);
+            logger.info("Employees deleted successfully: {}", employeeIds);
+            return new Response<>(1, "Employees Deleted successfully");
+        } catch (Exception e) {
+            logger.error("Error deleting employees: {}", e.getMessage());
+            return new Response<>(0, "Error deleting employees: " + e.getMessage());
         }
     }
 }

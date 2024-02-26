@@ -7,11 +7,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import com.Employee.EmployeeTask.Config.Response;
 import com.Employee.EmployeeTask.Constant.EmployeeConstant;
 import com.Employee.EmployeeTask.Service.EmployeeService;
 import com.Employee.EmployeeTask.entity.Employee;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,6 +26,7 @@ import java.util.Optional;
 @RequestMapping("/v1")
 public class EmployeeController {
 
+    private static final Logger logger = LoggerFactory.getLogger(EmployeeController.class);
     private final String UPLOAD_FOLDER = "Project20/src/main/java/com/Employee/uploads/";
 
     @Autowired
@@ -117,8 +119,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/images/{profile_picture}")
-    public ResponseEntity<byte[]> getImages(@PathVariable("profile_picture") String profilePicture) 
-    {
+    public ResponseEntity<byte[]> getImages(@PathVariable("profile_picture") String profilePicture) {
         Optional<Employee> imageOptional = employeeService.getImageById(profilePicture);
         if (imageOptional.isPresent()) {
             Employee image = imageOptional.get();
@@ -149,6 +150,96 @@ public class EmployeeController {
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>("Failed to upload file", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /*
+     * Created by Kappala Varalakshmi
+     * On 26-02-2024
+     */
+
+    @PostMapping("/save")
+    public ResponseEntity<Response<Employee>> saveEmployee(@RequestBody Employee employee) {
+        try {
+            Response<Employee> response = employeeService.saveEmployee(employee);
+            logger.info("Employee saved successfully: {}", response.getData());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error saving employee: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new Response<>("Error saving employee: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/delete/{id}")
+    public ResponseEntity<Response<String>> deleteEmployee(@PathVariable String id) {
+        try {
+            Response<String> response = employeeService.deleteEmployee(id);
+            logger.info("Employee deletion response: {}", response.getMessage());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error deleting employee: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new Response<>("Error deleting employee: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/getAll")
+    public ResponseEntity<Response<List<Employee>>> getAllEmployees() {
+        try {
+            Response<List<Employee>> employeesResponse = employeeService.getAllEmployees();
+            logger.info("Fetched all employees successfully");
+            return ResponseEntity.ok(employeesResponse);
+        } catch (Exception e) {
+            logger.error("Error fetching employees: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new Response<>("Error fetching employees: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Response<Employee>> getEmployeeById(@PathVariable String id) {
+        try {
+            Response<Employee> response = employeeService.getEmployeeById(id);
+            logger.info("Employee fetched successfully: {}", response.getData());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error fetching employee: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new Response<>("Error fetching employee: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/update/{id}")
+    public ResponseEntity<Response<Employee>> updateEmployeeById(@PathVariable String id,
+            @RequestBody Employee updatedEmployee) {
+        try {
+            Response<Employee> response = employeeService.updateEmployeeById(id, updatedEmployee);
+            logger.info("Employee updated successfully: {}", response.getData());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error updating employee: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new Response<>("Error updating employee: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/bulk-insert")
+    public ResponseEntity<Response<List<Employee>>> bulkInsertEmployees(@RequestBody List<Employee> employees) {
+        try {
+            Response<List<Employee>> response = employeeService.saveAllEmployees(employees);
+            logger.info("Bulk insert of employees successful");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error inserting employees: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new Response<>("Error inserting employees: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/bulk-delete")
+    public ResponseEntity<Response<String>> bulkDeleteEmployees(@RequestBody List<String> employeeIds) {
+        try {
+            Response<String> response = employeeService.deleteEmployeesByIds(employeeIds);
+            logger.info("Bulk deletion of employees successful");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error deleting employees: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new Response<>(0, "Error deleting employees: " + e.getMessage()));
         }
     }
 }

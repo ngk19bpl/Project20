@@ -4,6 +4,7 @@ import java.io.IOException;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.Optional;
 import java.util.List;
+import com.Employee.EmployeeTask.Config.Response;
 import com.Employee.EmployeeTask.entity.Employee;
 
 public interface EmployeeService {
@@ -23,4 +24,21 @@ public interface EmployeeService {
 
     Optional<Employee> getImageById(String profilePicture);
 
+    /*
+     * Created by Kappala Varalakshmi
+     * On 26-02-2024
+     */
+    Response<Employee> saveEmployee(Employee employee);
+
+    Response<String> deleteEmployee(String id);
+
+    Response<List<Employee>> getAllEmployees();
+
+    Response<Employee> getEmployeeById(String id);
+
+    Response<Employee> updateEmployeeById(String id, Employee updatedEmployee);
+
+    Response<List<Employee>> saveAllEmployees(List<Employee> employees);
+
+    Response<String> deleteEmployeesByIds(List<String> employeeIds);
 }
