@@ -4,7 +4,10 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Sort;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import com.Employee.EmployeeTask.Config.Response;
@@ -12,6 +15,8 @@ import com.Employee.EmployeeTask.Constant.EmployeeConstant;
 import com.Employee.EmployeeTask.Exception.EmployeeException;
 import com.Employee.EmployeeTask.Repository.EmployeeRepository;
 import com.Employee.EmployeeTask.entity.Employee;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
@@ -37,6 +42,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
     private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private JavaMailSender javaMailSender;
 
     @Override
     public void generateExcel() throws IOException {
@@ -237,10 +245,36 @@ public class EmployeeServiceImpl implements EmployeeService {
         try {
             Employee savedEmployee = employeeRepository.save(employee);
             logger.info("Employee saved successfully: {}", savedEmployee);
+            // Send welcome email with attachment
+            sendWelcomeEmail(savedEmployee);
             return new Response<>(savedEmployee, "Employee saved successfully");
         } catch (Exception e) {
             logger.error("Error saving employee: {}", e.getMessage());
             return new Response<>("Error saving employee: " + e.getMessage());
+        }
+    }
+
+    /* created by Divya Gattu */
+    /* 26/2/2024 */
+
+    private void sendWelcomeEmail(Employee employee) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper;
+
+        try {
+            helper = new MimeMessageHelper(mimeMessage, true);
+            helper.setTo(employee.getEmail());
+            helper.setSubject("Welcome to the Bluepal");
+            String htmlContent = "<p>Dear " + employee.getFirstName() + ",</p>"
+                    + "<p>Welcome to our company!</p>";
+            helper.setText(htmlContent, true);
+            ClassPathResource classPathResource = new ClassPathResource("office.jpg");
+            helper.addAttachment(classPathResource.getFilename(), classPathResource);
+
+            javaMailSender.send(mimeMessage);
+            logger.info("Welcome email sent successfully to: {}", employee.getEmail());
+        } catch (MessagingException e) {
+            logger.error("Error sending welcome email: {}", e.getMessage());
         }
     }
 
@@ -370,22 +404,22 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
     }
 
-        /*
+    /*
      * Created by Karima Shaik
      */
 
-     @Override
-     public List<Employee> searchEmployeesByFilter(String searchTerm) {
-         try {
-             if (searchTerm != null && !searchTerm.isEmpty()) {
-                 return employeeRepository.searchEmployeesByFilter(searchTerm);
-             } else {
-                 return employeeRepository.findAll();
-             }
-         } catch (Exception e) {
-             e.printStackTrace(); 
-             return Collections.emptyList(); 
-         }
-     }
+    @Override
+    public List<Employee> searchEmployeesByFilter(String searchTerm) {
+        try {
+            if (searchTerm != null && !searchTerm.isEmpty()) {
+                return employeeRepository.searchEmployeesByFilter(searchTerm);
+            } else {
+                return employeeRepository.findAll();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
 
 }
