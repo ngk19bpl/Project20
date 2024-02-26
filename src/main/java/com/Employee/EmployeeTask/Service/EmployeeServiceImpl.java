@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.List;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
@@ -368,5 +369,23 @@ public class EmployeeServiceImpl implements EmployeeService {
             return List.of();
         }
     }
+
+        /*
+     * Created by Karima Shaik
+     */
+
+     @Override
+     public List<Employee> searchEmployeesByFilter(String searchTerm) {
+         try {
+             if (searchTerm != null && !searchTerm.isEmpty()) {
+                 return employeeRepository.searchEmployeesByFilter(searchTerm);
+             } else {
+                 return employeeRepository.findAll();
+             }
+         } catch (Exception e) {
+             e.printStackTrace(); 
+             return Collections.emptyList(); 
+         }
+     }
 
 }

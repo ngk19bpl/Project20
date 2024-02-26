@@ -269,4 +269,22 @@ public class EmployeeController {
             return errorResponse;
         }
     }
+
+    /*
+     * Created by Karima Shaik
+     */
+    @PostMapping("/search")
+    public ResponseEntity<Object> searchEmployee(@RequestBody Map<String, String> requestBody) {
+        try {
+            String searchTerm = requestBody.get("searchTerm");
+            List<Employee> employees = employeeService.searchEmployeesByFilter(searchTerm);
+
+            Map<String, Object> response = Map.of("content", employees);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = Map.of("error", "An error occurred while processing the request.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
 }

@@ -43,4 +43,9 @@ public interface EmployeeService {
     Response<String> deleteEmployeesByIds(List<String> employeeIds);
 
     List<Employee> findEmployeesWithSorting(String field);
+
+     /*
+     * Created by Karima Shaik
+     */
+    List<Employee> searchEmployeesByFilter(String searchTerm);
 }
