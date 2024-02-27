@@ -12,6 +12,9 @@ import com.Employee.EmployeeTask.Constant.EmployeeConstant;
 import com.Employee.EmployeeTask.Service.EmployeeService;
 import com.Employee.EmployeeTask.dto.APIResponse;
 import com.Employee.EmployeeTask.entity.Employee;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
@@ -32,6 +35,17 @@ public class EmployeeController {
 
     @Autowired
     private EmployeeService employeeService;
+
+     /*
+     * Created by Anand Navya Gunduboina
+     * On 27-02-2024
+     */
+    @Operation(
+        summary = "Fetch all employee",
+        description = "fetches all employee entities and their data from data source")
+     @ApiResponses(value = {
+     @ApiResponse(responseCode = "200", description = "successful operation")
+})
 
     @GetMapping("/generate-excel")
     public ResponseEntity<String> generateExcel() {
